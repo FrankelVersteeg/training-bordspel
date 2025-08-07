@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/training-bordspel/static/css/main.c65f7c07.css",
-    "main.js": "/training-bordspel/static/js/main.be1e33e2.js",
+    "main.js": "/training-bordspel/static/js/main.fb25fde6.js",
     "static/js/453.d0c5e6a0.chunk.js": "/training-bordspel/static/js/453.d0c5e6a0.chunk.js",
     "index.html": "/training-bordspel/index.html",
     "main.c65f7c07.css.map": "/training-bordspel/static/css/main.c65f7c07.css.map",
-    "main.be1e33e2.js.map": "/training-bordspel/static/js/main.be1e33e2.js.map",
+    "main.fb25fde6.js.map": "/training-bordspel/static/js/main.fb25fde6.js.map",
     "453.d0c5e6a0.chunk.js.map": "/training-bordspel/static/js/453.d0c5e6a0.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c65f7c07.css",
-    "static/js/main.be1e33e2.js"
+    "static/js/main.fb25fde6.js"
   ]
 }
