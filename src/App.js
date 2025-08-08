@@ -840,14 +840,16 @@ if (!isGameMaster && playerTeam !== null) {
               <div>
                 <h3 className="text-lg font-bold mb-3">🏆 Scores</h3>
                 <div className="space-y-2">
-                  {teams.filter(team => team.connected).map((team, index) => (
-                    <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
-                      <span className={currentTeam === index ? 'font-bold text-blue-600' : ''}>
-                        {team.name} {currentTeam === index && '👈'}
-                      </span>
+                  {teams.map((team, index) => (
+  team.connected && (
+    <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+      <span className={currentTeam === index ? 'font-bold text-blue-600' : ''}>
+        {team.name} {currentTeam === index && '👈'}
+      </span>
                       <span className="font-bold">{team.position || 0}</span>
                     </div>
-                  ))}
+                    )
+))}
                 </div>
               </div>
               
