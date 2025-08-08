@@ -573,15 +573,26 @@ const createQRGame = async () => {
     boardSize: boardSize,
     teams: teams,
     state: 'qr-code',
-    currentTeam: 0
+    currentTeam: 0,
+    currentTask: null,
+    currentBet: null
   };
   
   await saveGameToFirebase(newGameId, gameData);
   
-  // Listen for team updates
+  // Listen for ALL game updates, not just teams
   listenToGameUpdates(newGameId, (data) => {
     if (data.teams) {
       setTeams(data.teams);
+    }
+    if (data.state && data.state !== gameState) {
+      setGameState(data.state);
+    }
+    if (data.currentTeam !== undefined) {
+      setCurrentTeam(data.currentTeam);
+    }
+    if (data.currentTask !== undefined) {
+      setCurrentTask(data.currentTask);
     }
   });
   
@@ -602,13 +613,17 @@ const startGame = async () => {
     boardSize: boardSize,
     teams: teams,
     state: 'playing',
-    currentTeam: 0
+    currentTeam: 0,
+    currentTask: null,
+    currentBet: null
   };
   
   await saveGameToFirebase(gameId, gameData);
   
   setGameState('playing');
   setCurrentTeam(0);
+  setCurrentTask(null);
+  setCurrentBet(null);
 };
 
 const joinTeam = async (teamIndex) => {
