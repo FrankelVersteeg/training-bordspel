@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { database } from './firebase';
+import { ref, set, onValue, push, remove } from 'firebase/database';
 
 const TrainingBoardGame = () => {
   const [gameState, setGameState] = useState('setup');
@@ -526,44 +528,106 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, [timerActive, timer]);
 
-  const generateGameId = () => {
+// Firebase functions for multiplayer
+const saveGameToFirebase = async (gameId, gameData) => {
+  try {
+    await set(ref(database, `games/${gameId}`), gameData);
+  } catch (error) {
+    console.error('Error saving game:', error);
+  }
+};
+
+const joinTeamInFirebase = async (gameId, teamIndex) => {
+  try {
+    await set(ref(database, `games/${gameId}/teams/${teamIndex}/connected`), true);
+  } catch (error) {
+    console.error('Error joining team:', error);
+  }
+};
+
+const listenToGameUpdates = (gameId, callback) => {
+  const gameRef = ref(database, `games/${gameId}`);
+  return onValue(gameRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      callback(data);
+    }
+  });
+};  
+const generateGameId = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
-  const createQRGame = () => {
-    if (selectedPresets.length === 0) {
-      alert('Selecteer minimaal één preset!');
-      return;
+const createQRGame = async () => {
+  if (selectedPresets.length === 0) {
+    alert('Selecteer minimaal één preset!');
+    return;
+  }
+  const newGameId = generateGameId();
+  setGameId(newGameId);
+  
+  // Save game to Firebase
+  const gameData = {
+    id: newGameId,
+    presets: selectedPresets,
+    boardSize: boardSize,
+    teams: teams,
+    state: 'qr-code',
+    currentTeam: 0
+  };
+  
+  await saveGameToFirebase(newGameId, gameData);
+  
+  // Listen for team updates
+  listenToGameUpdates(newGameId, (data) => {
+    if (data.teams) {
+      setTeams(data.teams);
     }
-    const newGameId = generateGameId();
-    setGameId(newGameId);
-    setGameState('qr-code');
-  };
+  });
+  
+  setGameState('qr-code');
+};
 
-  const startGame = () => {
-    const connectedTeams = teams.filter(team => team.connected).length;
-    if (connectedTeams === 0) {
-      alert('Er moet minimaal één team aangesloten zijn!');
-      return;
-    }
-    
-    const gameUrl = `${window.location.origin}${window.location.pathname}?game=${gameId}&master=true`;
-    window.open(gameUrl, '_blank');
+const startGame = async () => {
+  const connectedTeams = teams.filter(team => team.connected).length;
+  if (connectedTeams === 0) {
+    alert('Er moet minimaal één team aangesloten zijn!');
+    return;
+  }
+  
+  // Update game state in Firebase
+  const gameData = {
+    id: gameId,
+    presets: selectedPresets,
+    boardSize: boardSize,
+    teams: teams,
+    state: 'playing',
+    currentTeam: 0
   };
+  
+  await saveGameToFirebase(gameId, gameData);
+  
+  setGameState('playing');
+  setCurrentTeam(0);
+};
 
-  const joinTeam = (teamIndex) => {
-    setPlayerTeam(teamIndex);
-    setIsJoinMode(false);
-    
-    localStorage.setItem(`game_${gameId}_team`, teamIndex.toString());
-    
-    const newUrl = `${window.location.origin}${window.location.pathname}?game=${gameId}&team=${teamIndex}`;
-    window.history.replaceState({}, '', newUrl);
-    
-    setTeams(prev => prev.map((team, index) => 
-      index === teamIndex ? { ...team, connected: true } : team
-    ));
-  };
+const joinTeam = async (teamIndex) => {
+  setPlayerTeam(teamIndex);
+  setIsJoinMode(false);
+  
+  localStorage.setItem(`game_${gameId}_team`, teamIndex.toString());
+  
+  const newUrl = `${window.location.origin}${window.location.pathname}?game=${gameId}&team=${teamIndex}`;
+  window.history.replaceState({}, '', newUrl);
+  
+  // Update team in Firebase
+  await joinTeamInFirebase(gameId, teamIndex);
+  
+  // Update local state
+  setTeams(prev => prev.map((team, index) => 
+    index === teamIndex ? { ...team, connected: true } : team
+  ));
+};
 
   const getTask = () => {
     if (!currentBet) return;
@@ -661,6 +725,7 @@ useEffect(() => {
       </div>
     );
   }
+
 if (!isGameMaster && playerTeam !== null) {
     const myTeam = teams[playerTeam];
     return (
@@ -723,9 +788,27 @@ if (!isGameMaster && playerTeam !== null) {
                   onClick={getTask}
                   className="w-full mt-6 bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg"
                 >
-                  🎯 Krijg Je Opdracht
+                  🎯 Krijg Opdracht
                 </button>
               )}
+            </div>
+          )}
+
+          {gameState === 'playing' && currentTask && (
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
+              <h3 className="text-xl font-bold text-center mb-6">📝 Jouw Opdracht</h3>
+              <div className="text-center">
+                <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                  <p className="font-bold text-lg mb-2">{currentTask.preset}</p>
+                  <p className="text-gray-700">{currentTask.content}</p>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Inzet: <span className="font-bold">{currentTask.steps} punten</span>
+                </p>
+                <p className="text-sm text-green-600 font-medium mt-2">
+                  Wacht op gamemaster beoordeling...
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -733,6 +816,7 @@ if (!isGameMaster && playerTeam !== null) {
     );
   }
 
+ // Gamemaster view
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
       <div className="max-w-7xl mx-auto">
@@ -741,7 +825,63 @@ if (!isGameMaster && playerTeam !== null) {
           {gameId && <div className="text-white">Game ID: {gameId}</div>}
         </div>
 
-        {gameState === 'setup' && (
+        {/* VERWIJDER DE DEBUG INFO als het werkt */}
+        <div className="bg-red-500 text-white p-4 rounded mb-4">
+          <p>Debug: gameState = {gameState}</p>
+          <p>Debug: isGameMaster = {isGameMaster ? 'true' : 'false'}</p>
+          <p>Debug: teams connected = {teams.filter(t => t.connected).length}</p>
+        </div>
+
+        {gameState === 'playing' && isGameMaster && (
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
+            <h2 className="text-2xl font-bold text-center mb-6">🎮 Gamemaster Controle</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-bold mb-3">🏆 Scores</h3>
+                <div className="space-y-2">
+                  {teams.filter(team => team.connected).map((team, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                      <span className={currentTeam === index ? 'font-bold text-blue-600' : ''}>
+                        {team.name} {currentTeam === index && '👈'}
+                      </span>
+                      <span className="font-bold">{team.position || 0}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-bold mb-3">🎯 Huidige Opdracht</h3>
+                {currentTask ? (
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <p className="font-bold">{teams[currentTeam]?.name}</p>
+                    <p className="text-sm text-gray-600 mb-2">Inzet: {currentTask.steps} punten</p>
+                    <p className="mb-4">{currentTask.content}</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => judgeAnswer(true)}
+                        className="flex-1 bg-green-600 text-white py-2 rounded font-bold"
+                      >
+                        ✅ Geslaagd
+                      </button>
+                      <button
+                        onClick={() => judgeAnswer(false)}
+                        className="flex-1 bg-red-600 text-white py-2 rounded font-bold"
+                      >
+                        ❌ Gefaald
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">Wacht op team actie...</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+{gameState === 'setup' && (
           <div className="bg-white/95 rounded-3xl shadow-2xl p-8">
             <h2 className="text-2xl font-bold mb-6">Spel Configuratie</h2>
             
@@ -799,7 +939,7 @@ if (!isGameMaster && playerTeam !== null) {
           </div>
         )}
 
-        {gameState === 'qr-code' && (
+       {gameState === 'qr-code' && (
           <div className="bg-white/95 rounded-3xl shadow-2xl p-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">Teams kunnen nu aansluiten!</h2>
