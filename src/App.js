@@ -849,12 +849,15 @@ if (!isGameMaster && playerTeam !== null) {
         </div>
 
         {/* VERWIJDER DE DEBUG INFO als het werkt */}
-        <div className="bg-red-500 text-white p-4 rounded mb-4">
-          <p>Debug: gameState = {gameState}</p>
-          <p>Debug: isGameMaster = {isGameMaster ? 'true' : 'false'}</p>
-          <p>Debug: teams connected = {teams.filter(t => t.connected).length}</p>
-        </div>
-
+{/* VERWIJDER DE DEBUG INFO als het werkt */}
+<div className="bg-red-500 text-white p-4 rounded mb-4">
+  <p>Debug: gameState = {gameState}</p>
+  <p>Debug: isGameMaster = {isGameMaster ? 'true' : 'false'}</p>
+  <p>Debug: teams connected = {teams.filter(t => t.connected).length}</p>
+  <p>Debug: currentTask = {currentTask ? 'YES' : 'NO'}</p>
+  <p>Debug: teams is array = {Array.isArray(teams) ? 'YES' : 'NO'}</p>
+  <p>Debug: should show GM interface = {gameState === 'playing' && isGameMaster ? 'YES' : 'NO'}</p>
+</div>
         {gameState === 'playing' && isGameMaster && (
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
             <h2 className="text-2xl font-bold text-center mb-6">🎮 Gamemaster Controle</h2>
