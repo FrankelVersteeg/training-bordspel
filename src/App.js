@@ -884,55 +884,55 @@ if (!isGameMaster && playerTeam !== null) {
 </div>
         
         {gameState === 'playing' && isGameMaster && (
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
-            <h2 className="text-2xl font-bold text-center mb-6">🎮 Gamemaster Controle</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-bold mb-3">🏆 Scores</h3>
-                <div className="space-y-2">
-                  {teams.map((team, index) => (
-  team.connected && (
-    <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
-      <span className={currentTeam === index ? 'font-bold text-blue-600' : ''}>
-        {team.name} {currentTeam === index && '👈'}
-      </span>
-                      <span className="font-bold">{team.position || 0}</span>
-                    </div>
-                    )
-))}
-                </div>
+  <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
+    <h2 className="text-2xl font-bold text-center mb-6">🎮 Gamemaster Controle</h2>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h3 className="text-lg font-bold mb-3">🏆 Scores</h3>
+        <div className="space-y-2">
+          {teams.map((team, index) => (
+            team.connected && (
+              <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                <span className={currentTeam === index ? 'font-bold text-blue-600' : ''}>
+                  {team.name} {currentTeam === index && '👈'}
+                </span>
+                <span className="font-bold">{team.position || 0}</span>
               </div>
-              
-              <div>
-                <h3 className="text-lg font-bold mb-3">🎯 Huidige Opdracht</h3>
-                {currentTask ? (
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <p className="font-bold">{teams[currentTeam]?.name}</p>
-                    <p className="text-sm text-gray-600 mb-2">Inzet: {currentTask.steps} punten</p>
-                    <p className="mb-4">{currentTask.content}</p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => judgeAnswer(true)}
-                        className="flex-1 bg-green-600 text-white py-2 rounded font-bold"
-                      >
-                        ✅ Geslaagd
-                      </button>
-                      <button
-                        onClick={() => judgeAnswer(false)}
-                        className="flex-1 bg-red-600 text-white py-2 rounded font-bold"
-                      >
-                        ❌ Gefaald
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-500 italic">Wacht op team actie...</p>
-                )}
-              </div>
+            )
+          ))}
+        </div>
+      </div>
+      
+      <div>
+        <h3 className="text-lg font-bold mb-3">🎯 Huidige Opdracht</h3>
+        {currentTask ? (
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <p className="font-bold">{teams[currentTeam]?.name}</p>
+            <p className="text-sm text-gray-600 mb-2">Inzet: {currentTask.steps} punten</p>
+            <p className="mb-4">{currentTask.content}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => judgeAnswer(true)}
+                className="flex-1 bg-green-600 text-white py-2 rounded font-bold"
+              >
+                ✅ Geslaagd
+              </button>
+              <button
+                onClick={() => judgeAnswer(false)}
+                className="flex-1 bg-red-600 text-white py-2 rounded font-bold"
+              >
+                ❌ Gefaald
+              </button>
             </div>
           </div>
+        ) : (
+          <p className="text-gray-500 italic">Wacht op team actie...</p>
         )}
+      </div>
+    </div>
+  </div>
+)}
 
 {gameState === 'setup' && (
           <div className="bg-white/95 rounded-3xl shadow-2xl p-8">
