@@ -882,9 +882,6 @@ if (!isGameMaster && playerTeam !== null) {
 <div className="bg-yellow-500 text-black p-4 rounded mb-4">
   <p>TEST: Deze div zou ALTIJD moeten verschijnen!</p>
 </div>
-
-{gameState === 'playing' && isGameMaster && (
-  // ... rest van de gamemaster interface
         
         {gameState === 'playing' && isGameMaster && (
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
