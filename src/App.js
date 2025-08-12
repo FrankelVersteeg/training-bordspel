@@ -495,6 +495,7 @@ const TrainingBoardGame = () => {
 
   const taskTypes = ['knowledge', 'pictionary', 'seconds30'];
   const difficultyLevels = { 1: 'easy', 2: 'medium', 3: 'hard' };
+// Aparte useEffect voor URL game joining (spelers)
 useEffect(() => {
   const urlParams = new URLSearchParams(window.location.search);
   const gameIdFromUrl = urlParams.get('game');
@@ -505,14 +506,6 @@ useEffect(() => {
   setIsGameMaster(false);
   setIsJoinMode(true);
 
-  // Luister naar alle game-updates (met normalisatie uit Fix 1)
-  const unsub = listenToGameUpdates(gameIdFromUrl, (data) => {
-    if (data.teams) setTeams(data.teams);
-    if (typeof data.state === 'string') setGameState(data.state);
-    if (typeof data.currentTeam === 'number') setCurrentTeam(data.currentTeam);
-    if (data.currentTask !== undefined) setCurrentTask(data.currentTask);
-  });
-
   const storedTeam = localStorage.getItem(`game_${gameIdFromUrl}_team`);
   if (storedTeam) {
     const teamIndex = parseInt(storedTeam, 10);
@@ -522,9 +515,21 @@ useEffect(() => {
       index === teamIndex ? { ...team, connected: true } : team
     ));
   }
+}, []);
+
+// Aparte useEffect voor Firebase listener (iedereen met een gameId)
+useEffect(() => {
+  if (!gameId) return;
+
+  const unsub = listenToGameUpdates(gameId, (data) => {
+    if (data.teams) setTeams(data.teams);
+    if (typeof data.state === 'string') setGameState(data.state);
+    if (typeof data.currentTeam === 'number') setCurrentTeam(data.currentTeam);
+    if (data.currentTask !== undefined) setCurrentTask(data.currentTask);
+  });
 
   return () => { if (typeof unsub === 'function') unsub(); };
-}, []);
+}, [gameId]);
 
   useEffect(() => {
     let interval;
