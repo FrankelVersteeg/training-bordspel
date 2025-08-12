@@ -496,25 +496,35 @@ const TrainingBoardGame = () => {
   const taskTypes = ['knowledge', 'pictionary', 'seconds30'];
   const difficultyLevels = { 1: 'easy', 2: 'medium', 3: 'hard' };
 useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const gameIdFromUrl = urlParams.get('game');
-    
-    if (gameIdFromUrl) {
-      setGameId(gameIdFromUrl);
-      setIsGameMaster(false);
-      setIsJoinMode(true);
-      
-      const storedTeam = localStorage.getItem(`game_${gameIdFromUrl}_team`);
-      if (storedTeam) {
-        const teamIndex = parseInt(storedTeam);
-        setPlayerTeam(teamIndex);
-        setIsJoinMode(false);
-        setTeams(prev => prev.map((team, index) => 
-          index === teamIndex ? { ...team, connected: true } : team
-        ));
-      }
-    }
-  }, []);
+  const urlParams = new URLSearchParams(window.location.search);
+  const gameIdFromUrl = urlParams.get('game');
+
+  if (!gameIdFromUrl) return;
+
+  setGameId(gameIdFromUrl);
+  setIsGameMaster(false);
+  setIsJoinMode(true);
+
+  // Luister naar alle game-updates (met normalisatie uit Fix 1)
+  const unsub = listenToGameUpdates(gameIdFromUrl, (data) => {
+    if (data.teams) setTeams(data.teams);
+    if (typeof data.state === 'string') setGameState(data.state);
+    if (typeof data.currentTeam === 'number') setCurrentTeam(data.currentTeam);
+    if (data.currentTask !== undefined) setCurrentTask(data.currentTask);
+  });
+
+  const storedTeam = localStorage.getItem(`game_${gameIdFromUrl}_team`);
+  if (storedTeam) {
+    const teamIndex = parseInt(storedTeam, 10);
+    setPlayerTeam(teamIndex);
+    setIsJoinMode(false);
+    setTeams(prev => prev.map((team, index) => 
+      index === teamIndex ? { ...team, connected: true } : team
+    ));
+  }
+
+  return () => { if (typeof unsub === 'function') unsub(); };
+}, []);
 
   useEffect(() => {
     let interval;
@@ -549,9 +559,15 @@ const listenToGameUpdates = (gameId, callback) => {
   const gameRef = ref(database, `games/${gameId}`);
   return onValue(gameRef, (snapshot) => {
     const data = snapshot.val();
-    if (data) {
-      callback(data);
-    }
+    if (!data) return;
+
+    // Normaliseer teams: object → array
+    const normalized = {
+      ...data,
+      teams: Array.isArray(data.teams) ? data.teams : Object.values(data.teams || {})
+    };
+
+    callback(normalized);
   });
 };  
 const generateGameId = () => {
@@ -581,20 +597,12 @@ const createQRGame = async () => {
   await saveGameToFirebase(newGameId, gameData);
   
   // Listen for ALL game updates, not just teams
-  listenToGameUpdates(newGameId, (data) => {
-    if (data.teams) {
-      setTeams(data.teams);
-    }
-    if (data.state && data.state !== gameState) {
-      setGameState(data.state);
-    }
-    if (data.currentTeam !== undefined) {
-      setCurrentTeam(data.currentTeam);
-    }
-    if (data.currentTask !== undefined) {
-      setCurrentTask(data.currentTask);
-    }
-  });
+ listenToGameUpdates(newGameId, (data) => {
+  if (data.teams) setTeams(data.teams);               // al genormaliseerd
+  if (typeof data.state === 'string') setGameState(data.state);
+  if (typeof data.currentTeam === 'number') setCurrentTeam(data.currentTeam);
+  if (data.currentTask !== undefined) setCurrentTask(data.currentTask);
+});
   
   setGameState('qr-code');
 };
