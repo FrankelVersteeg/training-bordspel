@@ -855,6 +855,7 @@ if (!isGameMaster && playerTeam !== null) {
 
         {/* VERWIJDER DE DEBUG INFO als het werkt */}
 {/* VERWIJDER DE DEBUG INFO als het werkt */}
+{/* VERWIJDER DE DEBUG INFO als het werkt */}
 <div className="bg-red-500 text-white p-4 rounded mb-4">
   <p>Debug: gameState = {gameState}</p>
   <p>Debug: isGameMaster = {isGameMaster ? 'true' : 'false'}</p>
@@ -863,6 +864,28 @@ if (!isGameMaster && playerTeam !== null) {
   <p>Debug: teams is array = {Array.isArray(teams) ? 'YES' : 'NO'}</p>
   <p>Debug: should show GM interface = {gameState === 'playing' && isGameMaster ? 'YES' : 'NO'}</p>
 </div>
+
+{/* EXTRA TEST - VOEG DIT HIER TOE */}
+{gameState === 'playing' && (
+  <div className="bg-green-500 text-white p-4 rounded mb-4">
+    <p>Game is PLAYING!</p>
+  </div>
+)}
+
+{isGameMaster && (
+  <div className="bg-blue-500 text-white p-4 rounded mb-4">
+    <p>Je bent GAMEMASTER!</p>
+  </div>
+)}
+
+{/* TIJDELIJKE TEST - ALTIJD TONEN */}
+<div className="bg-yellow-500 text-black p-4 rounded mb-4">
+  <p>TEST: Deze div zou ALTIJD moeten verschijnen!</p>
+</div>
+
+{gameState === 'playing' && isGameMaster && (
+  // ... rest van de gamemaster interface
+        
         {gameState === 'playing' && isGameMaster && (
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
             <h2 className="text-2xl font-bold text-center mb-6">🎮 Gamemaster Controle</h2>
